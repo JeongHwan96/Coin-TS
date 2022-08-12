@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from "react";
-import { Helmet } from "react-helmet";
-import { useQuery } from "react-query";
 import { Link } from "react-router-dom";
-import { useSetRecoilState } from "recoil";
+import { useEffect, useState } from "react";
 import styled from "styled-components";
+import { useQuery } from "react-query";
 import { fetchCoins } from "../Api";
+import { Helmet } from "react-helmet";
+import { useRecoilValue, useSetRecoilState } from "recoil";
 import { isDarkAtom } from "./Atoms";
 
 const Title = styled.h1`
@@ -24,7 +24,7 @@ const Header = styled.head`
 
 const CoinList = styled.ul``;
 const Coin = styled.li`
-  background-color: white;
+  background-color: ${(props) => props.theme.boxColor};
   color: ${(props) => props.theme.textColor};
   width: 30%;
   margin: 0 auto;
@@ -58,8 +58,7 @@ const CoinImg = styled.img`
   height: 20%;
   margin: 0 5% 0 0;
 `;
-
-interface CoinObj {
+interface ICoin {
   id: string;
   name: string;
   symbol: string;
@@ -68,30 +67,29 @@ interface CoinObj {
   is_active: boolean;
   type: string;
 }
-
-interface ICoinsProps {}
-
-const Coins = () => {
+function Coins() {
+  const { isLoading, data } = useQuery<ICoin[]>("allCoins", fetchCoins);
+  const isDark = useRecoilValue(isDarkAtom);
   const setDarkAtom = useSetRecoilState(isDarkAtom);
   const toggleDarkAtom = () => setDarkAtom((prev) => !prev);
-  const { isLoading, data } = useQuery<CoinObj[]>("allCoins", fetchCoins);
-
   return (
     <Container>
       <Helmet>
-        <title>Coin</title>
+        <title>Coins</title>
       </Helmet>
       <Header>
-        <Title>Coin List</Title>
-        <button onClick={toggleDarkAtom}>Toggle Mode</button>
+        <Title>Coins</Title>
+        {/* <button onClick={toggleDarkAtom}>
+          {isDark ? "lightTheme" : "darkTheme"}
+        </button> */}
       </Header>
       {isLoading ? (
-        <Loading>Loading ...</Loading>
+        <Loading>Loading...</Loading>
       ) : (
         <CoinList>
-          {data?.slice(0, 100).map((coin) => (
+          {data?.slice(0, 10).map((coin) => (
             <Coin key={coin.id}>
-              <Link to={`/${coin.id}`} state={coin.name}>
+              <Link to={`/${coin.id}`} state={{ name: coin.name }}>
                 <CoinImg
                   src={`https://cryptocurrencyliveprices.com/img/${coin.id}.png`}
                   alt=""
@@ -104,6 +102,5 @@ const Coins = () => {
       )}
     </Container>
   );
-};
-
+}
 export default Coins;

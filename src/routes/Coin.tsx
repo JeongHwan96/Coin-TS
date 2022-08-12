@@ -1,38 +1,19 @@
 import { useEffect, useState } from "react";
-import { useParams, useMatch } from "react-router";
-import { Routes, Route, useLocation, Link } from "react-router-dom";
-import styled from "styled-components";
-import Chart from "../routes/Chart";
-import Price from "../routes/Price";
-
-import { useQuery } from "react-query";
-import { fetchCoinInfo, fetchCoinTickers } from "../Api";
 import { Helmet } from "react-helmet";
-
-const Title = styled.h1`
-  color: ${(props) => props.theme.accentColor};
-  font-size: 48px;
-  text-shadow: rgb(83 61 74) 1px 1px, rgb(83 61 74) 2px 2px,
-    rgb(83 61 74) 3px 3px, rgb(83 61 74) 4px 4px, rgb(83 61 74) 5px 5px,
-    rgb(83 61 74) 6px 6px;
-`;
-
-const Loader = styled.span`
-  text-align: center;
-  display: block;
-`;
-
-const Container = styled.div`
-  padding: 0px 20px;
-  max-width: 480px;
-  margin: 0 auto;
-`;
-const Header = styled.header`
-  height: 10vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-`;
+import { useQuery } from "react-query";
+import {
+  useLocation,
+  useParams,
+  useMatch,
+  Outlet,
+  Routes,
+  Route,
+} from "react-router-dom";
+import { Link } from "react-router-dom";
+import styled from "styled-components";
+import { fetchCoinInfo, fetchCoinTickers } from "../Api";
+import Chart from "./Chart";
+import Price from "./Price";
 
 const Home = styled.div`
   position: absolute;
@@ -46,6 +27,25 @@ const Home = styled.div`
   font-size: 30px;
 `;
 
+const Title = styled.h1`
+  font-size: 48px;
+  color: ${(props) => props.theme.accentColor};
+`;
+const Loader = styled.span`
+  text-align: center;
+  display: block;
+`;
+const Container = styled.div`
+  padding: 0px 20px;
+  max-width: 480px;
+  margin: 0 auto;
+`;
+const Header = styled.header`
+  height: 15vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+`;
 const Overview = styled.div`
   display: flex;
   justify-content: space-between;
@@ -53,12 +53,10 @@ const Overview = styled.div`
   padding: 10px 20px;
   border-radius: 10px;
 `;
-
 const OverviewItem = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-
   span:first-child {
     font-size: 10px;
     font-weight: 400;
@@ -75,7 +73,6 @@ const Tabs = styled.div`
   margin: 25px 0px;
   gap: 10px;
 `;
-
 const Tab = styled.span<{ isActive: boolean }>`
   text-align: center;
   text-transform: uppercase;
@@ -90,11 +87,9 @@ const Tab = styled.span<{ isActive: boolean }>`
     display: block;
   }
 `;
-
-interface RouterState {
+interface RouteState {
   name: string;
 }
-
 interface InfoData {
   id: string;
   name: string;
@@ -112,13 +107,9 @@ interface InfoData {
   proof_type: string;
   org_structure: string;
   hash_algorithm: string;
-  links: object;
-  links_extended: object;
-  whitepaper: object;
   first_data_at: string;
   last_data_at: string;
 }
-
 interface PriceData {
   id: string;
   name: string;
@@ -132,9 +123,9 @@ interface PriceData {
   last_updated: string;
   quotes: {
     USD: {
-      ath_date: number;
+      ath_date: string;
       ath_price: number;
-      market_ca: number;
+      market_cap: number;
       market_cap_change_24h: number;
       percent_change_1h: number;
       percent_change_1y: number;
@@ -152,18 +143,13 @@ interface PriceData {
     };
   };
 }
-
-interface ICoinProps {}
-
-function Coin({}: ICoinProps) {
+function Coin() {
   const { coinId } = useParams();
   const location = useLocation();
-  const state = location.state as RouterState;
-  const priceMatch = useMatch("/:coinId/price");
-  const chartMatch = useMatch("/:coinId/chart");
+  const state = location.state as RouteState;
   const { isLoading: infoLoading, data: infoData } = useQuery<InfoData>(
     ["info", coinId],
-    () => fetchCoinInfo(coinId as string)
+    () => fetchCoinInfo(coinId!)
   );
   const { isLoading: tickersLoading, data: tickersData } = useQuery<PriceData>(
     ["tickers", coinId],
@@ -172,28 +158,16 @@ function Coin({}: ICoinProps) {
       refetchInterval: 5000,
     }
   );
-  // const [info, setInfo] = useState<InfoData>();
-  // const [priceInfo, setPriceInfo] = useState<PriceData>();
-  // useEffect (()=>{
-  //   (async ()=> {
-  //     const infoData = await (
-  //       await fetch(`https://api.coinpaprika.com/v1/coins/${coinId}`)
-  //       ).json();
-  //     const priceData = await(
-  //       await fetch(`https://api.coinpaprika.com/v1/tickers/${coinId}`)
-  //     ).json()
-  //     setInfo(infoData);
-  //     setPriceInfo(priceData);
-  //     setLoading(false);
-  //     })();
-  // },[coinId]);
+  const priceMatch = useMatch("/:coinId/price");
+  const chartMatch = useMatch("/:coinId/chart");
   const loading = infoLoading || tickersLoading;
   return (
     <Container>
-      <title>
-        {state?.name ? state.name : loading ? "Loading..." : infoData?.name}
-      </title>
-
+      <Helmet>
+        <title>
+          {state?.name ? state.name : loading ? "Loading..." : infoData?.name}
+        </title>
+      </Helmet>
       <Header>
         <Home>
           <a href="/Coin-TS">
@@ -260,5 +234,4 @@ function Coin({}: ICoinProps) {
     </Container>
   );
 }
-
 export default Coin;
